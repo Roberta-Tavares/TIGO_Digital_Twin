@@ -17,8 +17,8 @@
           <!-- Se o seu STL estiver na pasta, ele usará. Se não, comente a linha mesh e descomente a box -->
           <!-- <box><size>0.30 0.30 0.10</size></box> -->
           <mesh>
-            <uri>file:///home/betinha/ws_gap/src/tigo_gazebo/models/meshes/Tigo_para_gazebo.stl</uri>
-            <scale>0.001 0.001 0.001</scale> 
+              <uri>../models/meshes/Tigo_para_gazebo.stl</uri>
+              <scale>0.001 0.001 0.001</scale> 
           </mesh> 
        </geometry>
         <material><ambient>0.2 0.2 0.2 1</ambient></material>

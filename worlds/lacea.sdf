@@ -18,7 +18,7 @@
 
     <!-- Inclusão do TIGO com caminho absoluto -->
     <include>
-      <uri>file:///home/betinha/ws_gap/src/tigo_gazebo/urdf/tigo.sdf</uri>
+        <uri>../urdf/tigo.sdf</uri>
     </include>
     
     <!-- Chão -->
@@ -37,8 +37,8 @@
     <model name="LACEA">
       <static>true</static>
       <link name="link">
-        <collision name="collision"><geometry><mesh><uri>file:///home/betinha/ws_gap/src/tigo_gazebo/models/LACEA_prototipo_sem_chao_v2.dae</uri></mesh></geometry></collision>
-        <visual name="visual"><geometry><mesh><uri>file:///home/betinha/ws_gap/src/tigo_gazebo/models/LACEA_prototipo_sem_chao_v2.dae</uri></mesh></geometry></visual>
+        <collision name="collision"><geometry><mesh><uri>../models/LACEA_prototipo_sem_chao_v2.dae</uri></mesh></geometry></collision>
+        <visual name="visual"><geometry><mesh><uri>../models/LACEA_prototipo_sem_chao_v2.dae</uri></mesh></geometry></visual>
       </link>
     </model>
     

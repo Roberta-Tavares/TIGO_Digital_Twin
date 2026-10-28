@@ -290,17 +290,17 @@ Conclusão:
 
 Concluído:
 
-- Bridge instalada
-- Comunicação ROS ↔ Gazebo configurada
-- Publicação de /cmd_vel validada
-- Estrutura preparada para integração da câmera virtual
+- Bridge instalada e unificada via `scripts/run_bridge.sh`
+- Comunicação bidirecional ROS 2 ↔ Gazebo validada
+- Publicação de `/cmd_vel` com controle das 4 rodas Mecanum validada
+- Publicação da câmera de profundidade em 15 Hz validada
+- Algoritmo Gap Following adaptado para tratar dados virtuais (metros e infinitos) mantendo compatibilidade física
+- Robô navegando de forma autônoma no cenário virtual do LACEA
 
 ---
 
 # Próximos Passos
 
-- Validar publicação da câmera de profundidade
-- Inserir obstáculos virtuais
-- Testar navegação autônoma completa
-- Integrar SLAM
-- Integrar Nav2
+- Inserir obstáculos dinâmicos no cenário
+- Validar desvios com diferentes geometrias de obstáculo
+- Integrar mapeamento SLAM e Nav2

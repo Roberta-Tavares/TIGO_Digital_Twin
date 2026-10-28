@@ -44,6 +44,11 @@ TIGO_Digital_Twin
 │   └── meshes
 │       └── Tigo_para_gazebo.stl
 │
+├── scripts
+│   ├── run_simulation.sh
+│   ├── run_bridge.sh
+│   └── gap_phase35.py
+│
 ├── docs
 │   └── imagens
 │
@@ -69,7 +74,9 @@ O modelo do TIGO utiliza:
 
 - Malha STL real do chassi
 - Escala convertida para metros
-- Estrutura preparada para sensores virtuais
+- Rodas Mecanum omnidirecionais com atrito direcional
+- Câmera de profundidade virtual HP60C
+- Plugin `ignition-gazebo-mecanum-drive-system` para movimentação omnidirecional
 - Base para integração ROS 2
 
 Arquivo:
@@ -80,29 +87,39 @@ models/meshes/Tigo_para_gazebo.stl
 
 ---
 
-## Executando a Simulação
+## Executando o Projeto
 
-Abrir o Ignition Gazebo:
+O projeto pode ser executado facilmente através dos scripts disponíveis na pasta `scripts/`:
+
+### 1. Iniciar a Simulação no Gazebo
+
+Em um terminal:
 
 ```bash
-ign gazebo worlds/lacea.sdf
+./scripts/run_simulation.sh
 ```
 
----
+### 2. Iniciar a Ponte ROS 2 ↔ Gazebo (Bridge)
 
-## Integração ROS 2
-
-A comunicação entre o Gazebo e o ROS 2 é realizada utilizando:
+Em um segundo terminal:
 
 ```bash
-ros_gz_bridge
+./scripts/run_bridge.sh
 ```
 
-Exemplo:
+A ponte conecta os tópicos:
+- `/cmd_vel` (`ROS 2 -> Gazebo`)
+- `/ascamera_hp60c/camera_publisher/depth0/image_raw` (`Gazebo -> ROS 2`)
+- `/ascamera_hp60c/camera_publisher/depth0/camera_info` (`Gazebo -> ROS 2`)
+- `/model/tigo/odometry` (`Gazebo -> ROS 2`)
+
+### 3. Executar a Navegação Autônoma (Gap Following)
+
+Em um terceiro terminal:
 
 ```bash
-ros2 run ros_gz_bridge parameter_bridge \
-/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist
+source /opt/ros/humble/setup.bash
+python3 scripts/gap_phase35.py
 ```
 
 ---
@@ -112,11 +129,12 @@ ros2 run ros_gz_bridge parameter_bridge \
 - [x] Criação do ambiente virtual
 - [x] Inserção do modelo STL do TIGO
 - [x] Organização do repositório
-- [ ] Implementação da câmera de profundidade
-- [ ] Ponte ROS ↔ Gazebo
-- [ ] Integração do algoritmo Gap Following
-- [ ] Navegação autônoma completa
-- [ ] Validação experimental
+- [x] Implementação da câmera de profundidade
+- [x] Ponte ROS ↔ Gazebo
+- [x] Integração do algoritmo Gap Following
+- [x] Navegação autônoma em simulação
+- [ ] Inserção de obstáculos dinâmicos adicionais
+- [ ] Validação experimental comparativa (simulado vs real)
 
 ---
 

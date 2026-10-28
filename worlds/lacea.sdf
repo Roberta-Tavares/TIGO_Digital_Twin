@@ -8,6 +8,11 @@
     </scene>
     <gravity>0 0 -9.8</gravity>
 
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
     <!-- Plugins -->
     <plugin filename="libignition-gazebo-physics-system.so" name="ignition::gazebo::systems::Physics"/>
     <plugin filename="libignition-gazebo-user-commands-system.so" name="ignition::gazebo::systems::UserCommands"/>
@@ -18,7 +23,7 @@
 
     <!-- Inclusão do TIGO com caminho absoluto -->
     <include>
-        <uri>../urdf/tigo.sdf</uri>
+        <uri>package://urdf/tigo.sdf</uri>
     </include>
     
     <!-- Chão -->

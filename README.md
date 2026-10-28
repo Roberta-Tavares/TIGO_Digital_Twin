@@ -137,6 +137,9 @@ python3 scripts/gap_phase35.py
 - [ ] Validação experimental comparativa (simulado vs real)
 
 ---
+## Orientadora
+
+Milena Faria Pinto
 
 ## Autora
 

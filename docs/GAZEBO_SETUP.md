@@ -144,6 +144,23 @@ Responsável por definir:
 - sensores
 - integração ROS
 
+## Orientação do Chassi e da Câmera
+
+O movimento do modelo usa o eixo local `+X` como frente. A malha STL tem seu
+comprimento no eixo local `Y`, por isso o visual do chassi recebe uma rotação
+de `-90°` no próprio link para alinhar a frente visual ao eixo de movimento.
+
+A câmera de profundidade fica montada à frente e acima do centro do chassi:
+
+```xml
+<pose>0.18 0 0.12 0 0 0</pose>
+```
+
+Ela aponta para `+X`. O sensor é virtual e não possui uma carcaça visual
+separada no modelo. A pose inicial do modelo está em `4.2 2.5 0.041` com yaw
+`-90°`; ajuste esse yaw se a posição inicial precisar apontar para outro lado
+do laboratório.
+
 ---
 
 # STL do Chassi
@@ -303,6 +320,8 @@ Concluído:
 
 - Ambiente do LACEA carregado
 - Modelo STL integrado
+- Visual do chassi alinhado ao eixo frontal do movimento
+- Câmera de profundidade virtual montada na dianteira do chassi
 - Física configurada
 - Estrutura do projeto organizada
 - Repositório preparado para compartilhamento
@@ -312,8 +331,8 @@ Concluído:
 # Próximas Melhorias
 
 - Inserção de obstáculos dinâmicos
-- Câmera de profundidade virtual
+- Validar visualmente a imagem da câmera de profundidade
 - Sensor RGB virtual
-- Integração completa com Gap Following
+- Validar navegação Gap Following em diferentes cenários
 - Integração com Nav2
 - Integração com SLAM

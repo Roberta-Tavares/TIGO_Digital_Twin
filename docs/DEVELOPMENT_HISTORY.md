@@ -340,17 +340,35 @@ Os arquivos do projeto foram enviados para o GitHub.
 
 ---
 
+# Etapa 13 - Ajustes de Orientação e Recuperação
+
+Durante os testes, o visual do chassi e o eixo de movimento estavam desalinhados:
+a malha STL tem seu comprimento no eixo local `Y`, enquanto o plugin de
+movimento e a câmera usam `+X` como frente. O visual foi rotacionado em `-90°`
+e a câmera virtual foi reposicionada à frente e acima do chassi.
+
+O Gap Following recebeu recuos progressivos quando não encontra gaps. Após o
+recuo, faz uma varredura temporizada para esquerda e direita, compara os scores
+dos gaps e mantém o robô parado se não houver uma opção detectada após o limite
+de tentativas. Essa varredura é parcial, não uma rotação de 360°.
+
+---
+
 # Estado Atual
 
 Concluído:
 
 - Ambiente virtual criado
-- Modelo STL integrado
+- Modelo STL integrado e visual alinhado ao eixo de movimento
+- Câmera de profundidade virtual posicionada na dianteira
 - Estrutura do LACEA carregada
-- Repositório GitHub configurado
-- ROS 2 Humble integrado
-- Ignition Gazebo operacional
-- Bridge instalada
+- ROS 2 Humble e Ignition Gazebo integrados pela bridge
+- Gap Following com recuo progressivo e varredura temporizada para esquerda e direita
+
+Em validação:
+
+- Qualidade da imagem de profundidade e detecção de gaps em diferentes cenários
+- Resposta do robô aos desvios durante a navegação autônoma
 
 ---
 
@@ -358,15 +376,13 @@ Concluído:
 
 ## Curto Prazo
 
-- Configurar câmera de profundidade virtual
-- Publicar tópicos de profundidade
-- Validar aquisição de imagens
+- Validar visualmente o tópico de profundidade da câmera
+- Testar gaps e obstáculos com diferentes geometrias
 
 ## Médio Prazo
 
-- Integrar completamente o Gap Following
 - Inserir obstáculos virtuais
-- Testar desvio autônomo
+- Comparar navegação simulada com testes do robô físico
 
 ## Longo Prazo
 

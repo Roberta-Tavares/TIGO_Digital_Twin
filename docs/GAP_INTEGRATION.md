@@ -4,7 +4,8 @@
 
 Este documento descreve a integração entre o algoritmo de navegação autônoma do TIGO e o ambiente virtual desenvolvido no Ignition Gazebo.
 
-O objetivo é permitir que o mesmo algoritmo utilizado no robô físico seja executado sem modificações dentro da simulação.
+O objetivo é executar na simulação o nó de navegação ROS 2 que recebe imagens
+de profundidade e publica comandos de velocidade.
 
 ---
 
@@ -138,66 +139,29 @@ Gaps candidatos
 
 ---
 
-# Validação Física
+## Critério de Aceitação Atual
 
-Nem todo gap encontrado é navegável.
-
-É necessário verificar sua largura física.
-
-Modelo utilizado:
-
-```text
-Modelo Pinhole
-```
-
-Equação:
-
-```text
-Largura Real = (Pixels × Profundidade) / fx
-```
-
-onde:
-
-```text
-fx = 566.83
-```
-
----
-
-# Critério de Aceitação
-
-Um gap somente é aceito quando:
-
-```text
-largura_real >= largura_segura
-```
-
-A largura segura considera:
-
-- dimensões do TIGO
-- margem de segurança
+O código atual identifica uma coluna como livre quando a profundidade média da
+faixa central excede `DIST_OBSTACULO` (0,75 m). Um gap candidato precisa ter pelo
+menos `LARGURA_ROBO_PX` (70 pixels). A largura física do gap não é calculada no
+momento.
 
 ---
 
 # Seleção do Gap
 
-Quando múltiplos gaps existem:
+Os candidatos são pontuados pela largura em pixels e pela profundidade média:
 
 ```text
-Gap mais próximo do centro
+score = largura_px * 0.7 + profundidade_media_m * 25
 ```
 
-ou
-
-```text
-Gap com melhor pontuação
-```
-
-é escolhido.
+O gap de maior score é escolhido; o erro em relação ao centro da imagem define
+a correção angular durante a navegação normal.
 
 ---
 
-# Controle do Movimento
+## Controle do Movimento
 
 O algoritmo publica mensagens:
 
@@ -208,7 +172,7 @@ geometry_msgs/msg/Twist
 no tópico:
 
 ```text
-/ cmd_vel
+/cmd_vel
 ```
 
 ---
@@ -225,58 +189,32 @@ Gap válido encontrado
 
 Comportamento:
 
-- avanço frontal
-- correção lateral
-- alinhamento gradual
+- avanço no eixo frontal
+- correção angular em direção ao centro do gap
 
 ---
 
-## Modo Escape
+## Recuperação de Obstáculos
 
-Condição:
+Quando a distância mínima na região central fica abaixo de `DIST_CRITICA`
+(0,45 m), o robô recua antes da varredura. Se não houver gap direto ou a
+varredura não encontrar gaps, o ciclo de recuo e busca pode ser repetido até
+três tentativas. O recuo começa em 1,8 s e aumenta 0,5 s por tentativa, até
+2,8 s; depois disso, o robô para por segurança.
+
+Quando um obstáculo está entre `DIST_CRITICA` (0,45 m) e
+`DIST_OBSTACULO` (0,75 m), o robô inicia a varredura temporizada: gira para a
+esquerda por 1,3 s e retorna para a direita por 2,6 s, comparando os scores
+dos gaps observados. Essa busca não é uma volta completa de 360 graus.
 
 ```text
-Nenhum gap válido encontrado
-```
-
-Comportamento:
-
-```text
-Recuar
+Recuar quando necessário
 ↓
-Varrer ambiente
+Varrer esquerda e direita parado
 ↓
-Escolher direção
+Escolher o lado com maior score
 ↓
-Retornar à navegação
-```
-
----
-
-# Filtro EMA
-
-Foi implementado:
-
-```text
-Exponential Moving Average
-```
-
-Objetivo:
-
-Suavizar oscilações.
-
-Equação:
-
-```text
-erro_filtrado =
-α × erro_atual +
-(1 − α) × erro_anterior
-```
-
-Parâmetro utilizado:
-
-```text
-α = 0.3
+Contornar e retomar a navegação
 ```
 
 ---
@@ -292,32 +230,24 @@ ros_gz_bridge
 Bridge utilizada:
 
 ```bash
-ros2 run ros_gz_bridge parameter_bridge \
-/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist \
-/ascamera_hp60c/camera_publisher/depth0/image_raw@sensor_msgs/msg/Image@ignition.msgs.Image
+./scripts/run_bridge.sh
 ```
 
 ---
 
 # Testes Realizados
 
-Durante os testes foram observados logs como:
+Os logs de execução incluem mensagens como:
 
 ```text
-[BLOQUEADO] Nenhum gap direto
-
-Varrendo DIREITA
-
-DECISÃO: Desviar para a ESQUERDA
-
-Contorno concluído
+[NAVEGANDO] Vx=... | Wz=... | Gap=...px | Z=...m
+[OBSTÁCULO] Distância: ...m. Varrendo ESQUERDA...
+[SEM GAP] Nenhum gap após a varredura. Novo recuo ...
 ```
 
-Isso confirmou:
-
-- execução correta do algoritmo
-- publicação de Twist
-- funcionamento da máquina de estados
+Os comandos de velocidade são publicados em `/cmd_vel`. A odometria está
+disponível na bridge para monitoramento, mas o Gap Following atual não a usa
+para medir ângulos de varredura.
 
 ---
 

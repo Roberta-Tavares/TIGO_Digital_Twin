@@ -77,13 +77,22 @@ A bridge é responsável por converter automaticamente essas mensagens.
 
 # Bridge Utilizada
 
-Durante o desenvolvimento foi utilizada a seguinte configuração:
+O projeto inicia a bridge configurada para `/cmd_vel`, imagem de profundidade,
+informações da câmera e odometria com:
 
 ```bash
-ros2 run ros_gz_bridge parameter_bridge \
-/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist \
-/ascamera_hp60c/camera_publisher/depth0/image_raw@sensor_msgs/msg/Image@ignition.msgs.Image
+./scripts/run_bridge.sh
 ```
+
+O script `scripts/run_bridge.sh` contém as associações completas dos tópicos e
+tipos ROS/Gazebo.
+
+| Tópico | Direção | Tipo ROS |
+|---|---|---|
+| `/cmd_vel` | ROS 2 → Gazebo | `geometry_msgs/msg/Twist` |
+| `/ascamera_hp60c/camera_publisher/depth0/image_raw` | Gazebo → ROS 2 | `sensor_msgs/msg/Image` |
+| `/ascamera_hp60c/camera_publisher/depth0/camera_info` | Gazebo → ROS 2 | `sensor_msgs/msg/CameraInfo` |
+| `/model/tigo/odometry` | Gazebo → ROS 2 | `nav_msgs/msg/Odometry` |
 
 ---
 
@@ -142,6 +151,26 @@ Tópico:
 ```text
 /ascamera_hp60c/camera_publisher/depth0/image_raw
 ```
+
+---
+
+# Comunicação da Odometria
+
+Responsabilidade:
+
+```text
+Gazebo → ROS 2
+```
+
+Tópico e tipo ROS:
+
+```text
+/model/tigo/odometry
+nav_msgs/msg/Odometry
+```
+
+A odometria está disponível para ferramentas e nós ROS. O script atual do Gap
+Following não a utiliza para controlar a navegação.
 
 ---
 

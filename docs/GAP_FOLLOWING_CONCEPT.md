@@ -109,9 +109,9 @@ Por isso foi necessária uma abordagem baseada em profundidade.
 
 ---
 
-# Gap Following Baseado em Profundidade
+## Estágio Conceitual: Gap Following Baseado em Profundidade
 
-O TIGO utiliza uma câmera de profundidade.
+O projeto utiliza uma câmera de profundidade para alimentar o algoritmo.
 
 Sensor:
 
@@ -121,7 +121,7 @@ HP60C (Angstrong)
 
 Em vez de utilizar apenas a geometria da imagem, o algoritmo utiliza a distância real medida pelo sensor.
 
-Isso permite estimar:
+Uma evolução possível é estimar:
 
 ```text
 Largura física do gap
@@ -129,7 +129,7 @@ Largura física do gap
 
 ---
 
-# Modelo Pinhole
+### Modelo Pinhole
 
 A largura real do espaço livre é calculada através do modelo de câmera Pinhole.
 
@@ -145,7 +145,22 @@ onde:
 fx = distância focal da câmera
 ```
 
-No TIGO:
+O valor de `fx = 566.83` é uma referência de calibração e ainda não é usado pelo
+script atual para validar a largura física dos gaps.
+
+### Implementação atual
+
+O script `scripts/gap_phase35.py` calcula a profundidade média por coluna em
+uma faixa central da imagem e marca como livre a coluna acima do limiar de
+0,75 m. Aceita sequências com pelo menos 70 pixels e pontua os gaps pela
+largura em pixels e profundidade média. A conversão para largura física e o
+filtro EMA descritos como possibilidades abaixo ainda não estão implementados.
+
+O modo de recuperação atual pode recuar e então varrer à esquerda por 1,3 s e
+à direita por 2,6 s, comparando os melhores scores observados. Essa varredura
+é temporizada e não garante uma volta de 360°.
+
+Referência de calibração:
 
 ```text
 fx = 566.83
@@ -164,9 +179,9 @@ A utilização da profundidade permite:
 
 ---
 
-# Aplicação no TIGO
+# Fluxo Conceitual
 
-O algoritmo desenvolvido para o TIGO executa:
+O fluxo planejado para uma versão com validação física seria:
 
 ```text
 Mapa de Profundidade
@@ -253,7 +268,7 @@ Desvantagens:
 
 # Abordagem Utilizada no Projeto
 
-O método desenvolvido para o TIGO pode ser classificado como:
+O método atual pode ser classificado como:
 
 ```text
 Depth-Based Gap Following
@@ -262,10 +277,11 @@ Depth-Based Gap Following
 ou
 
 ```text
-Gap Following Baseado em Profundidade
+Gap Following baseado em profundidade
 ```
 
-pois utiliza informações tridimensionais obtidas pela câmera HP60C para validar fisicamente cada espaço navegável.
+pois usa dados de profundidade da câmera HP60C para classificar colunas e
+pontuar gaps. A validação da largura física ainda é uma melhoria futura.
 
 ---
 
@@ -275,4 +291,3 @@ pois utiliza informações tridimensionais obtidas pela câmera HP60C para valid
 - Validação da câmera virtual
 - Testes com obstáculos simulados
 - Comparação com métodos baseados em SLAM
-

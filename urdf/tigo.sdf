@@ -27,7 +27,7 @@
 
       <!-- STL APENAS VISUAL (NUNCA EM COLLISION PARA NÃO PESAR OU TRAVAR A FÍSICA) -->
       <visual name="chassis_visual">
-        <pose>0 0 0.069 0 0 0</pose>
+        <pose>0 0 0.069 0 0 -1.5708</pose>
         <geometry>
           <mesh>
             <uri>../models/meshes/Tigo_para_gazebo.stl</uri>
@@ -42,7 +42,7 @@
 
       <!-- CÂMERA DE PROFUNDIDADE HP60C VIRTUAL (UTILIZADA PELO GAP FOLLOWING) -->
       <sensor name="ascamera_hp60c" type="depth_camera">
-        <pose>0.15 0 0.06 0 0 0</pose>
+        <pose>0.18 0 0.12 0 0 0</pose>
         <update_rate>15</update_rate>
         <always_on>true</always_on>
         <topic>/ascamera_hp60c/camera_publisher/depth0/image_raw</topic>

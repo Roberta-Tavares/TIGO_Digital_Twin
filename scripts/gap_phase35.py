@@ -29,11 +29,13 @@ class GapPhase35(Node):
         self.VX_MAX = 0.30            # Velocidade linear máxima reduzida p/ maior controle
         self.VX_MIN = 0.15            
         self.WZ_VARREDURA = 0.65      # Velocidade angular aumentada para varrer mais área
+        self.TEMPO_RECUO_INICIAL = 1.8
+        self.MAX_TENTATIVAS_RECUO = 3
         
         self.estado = 'NAVEGANDO'
         self.tempo_inicio_estado = time.time()
         self.ultimo_print = time.time()
-        
+        self.tentativas_recuo = 0
         self.gap_esquerda_max = 0.0
         self.gap_direita_max = 0.0
         self.direcao_escolhida = None
@@ -132,6 +134,7 @@ class GapPhase35(Node):
                 self.get_logger().warn(f"[CRÍTICO] Obstáculo a {dist_min_centro:.2f}m! Iniciando RECUO...")
                 self.estado = 'RECUANDO'
                 self.tempo_inicio_estado = tempo_atual
+                self.tentativas_recuo = 1
                 return
 
             if 0.08 < dist_min_centro < self.DIST_OBSTACULO:
@@ -141,11 +144,13 @@ class GapPhase35(Node):
                 self.tempo_inicio_estado = tempo_atual
                 self.gap_esquerda_max = 0.0
                 self.gap_direita_max = 0.0
+                self.tentativas_recuo = 0
                 return
 
             pontuacao, melhor_gap = self.avaliar_gaps(perfil, larg)
 
             if melhor_gap:
+                self.tentativas_recuo = 0
                 g_inicio, g_fim, z_medio, g_larg = melhor_gap
                 g_centro = (g_inicio + g_fim) / 2.0
                 
@@ -161,12 +166,20 @@ class GapPhase35(Node):
                     self.ultimo_print = tempo_atual
             else:
                 self.parar()
-                self.get_logger().warn("[BLOQUEADO] Nenhum gap direto. Recuando...")
+                self.tentativas_recuo = 1
+                self.get_logger().warn(
+                    f"[BLOQUEADO] Nenhum gap direto. Recuo {self.tentativas_recuo}/"
+                    f"{self.MAX_TENTATIVAS_RECUO} antes de varrer..."
+                )
                 self.estado = 'RECUANDO'
                 self.tempo_inicio_estado = tempo_atual
 
         elif self.estado == 'RECUANDO':
-            if tempo_atual - self.tempo_inicio_estado < 1.2:
+            duracao_recuo = min(
+                self.TEMPO_RECUO_INICIAL + 0.5 * (self.tentativas_recuo - 1),
+                2.8,
+            )
+            if tempo_atual - self.tempo_inicio_estado < duracao_recuo:
                 self.publicar_cmd(-0.15, 0.0, 0.0)
             else:
                 self.parar()
@@ -178,7 +191,7 @@ class GapPhase35(Node):
         elif self.estado == 'VARRENDO_ESQ':
             pontuacao, _ = self.avaliar_gaps(perfil, larg)
             self.gap_esquerda_max = max(self.gap_esquerda_max, pontuacao)
-            
+
             if tempo_atual - self.tempo_inicio_estado < 1.3:
                 self.publicar_cmd(0.0, 0.0, self.WZ_VARREDURA)
             else:
@@ -195,20 +208,40 @@ class GapPhase35(Node):
                 self.publicar_cmd(0.0, 0.0, -self.WZ_VARREDURA)
             else:
                 self.parar()
-                self.direcao_escolhida = 'ESQUERDA' if self.gap_esquerda_max >= self.gap_direita_max else 'DIREITA'
-                self.get_logger().info(
-                    f"==================================================\n"
-                    f" DECISÃO: Desviar para a {self.direcao_escolhida}\n"
-                    f" Score Esq: {self.gap_esquerda_max:.1f} | Score Dir: {self.gap_direita_max:.1f}\n"
-                    f"=================================================="
-                )
-                self.estado = 'CONTORNANDO'
-                self.tempo_inicio_estado = tempo_atual
+                if self.gap_esquerda_max <= 0.0 and self.gap_direita_max <= 0.0:
+                    if self.tentativas_recuo < self.MAX_TENTATIVAS_RECUO:
+                        self.tentativas_recuo += 1
+                        self.get_logger().warn(
+                            f"[SEM GAP] Nenhum gap após a varredura. "
+                            f"Novo recuo {self.tentativas_recuo}/"
+                            f"{self.MAX_TENTATIVAS_RECUO}..."
+                        )
+                        self.estado = 'RECUANDO'
+                        self.tempo_inicio_estado = tempo_atual
+                    else:
+                        self.get_logger().error(
+                            "[SEM GAP] Limite de recuos atingido. Robô parado por segurança."
+                        )
+                        self.estado = 'BLOQUEADO'
+                else:
+                    self.direcao_escolhida = (
+                        'ESQUERDA'
+                        if self.gap_esquerda_max >= self.gap_direita_max
+                        else 'DIREITA'
+                    )
+                    self.get_logger().info(
+                        f"==================================================\n"
+                        f" DECISÃO: Desviar para a {self.direcao_escolhida}\n"
+                        f" Score Esq: {self.gap_esquerda_max:.1f} | Score Dir: {self.gap_direita_max:.1f}\n"
+                        f"=================================================="
+                    )
+                    self.estado = 'CONTORNANDO'
+                    self.tempo_inicio_estado = tempo_atual
 
         elif self.estado == 'CONTORNANDO':
             wz = self.WZ_VARREDURA * 1.2 if self.direcao_escolhida == 'ESQUERDA' else -self.WZ_VARREDURA * 1.2
             duracao = 2.0 if self.direcao_escolhida == 'ESQUERDA' else 1.6
-            
+
             if tempo_atual - self.tempo_inicio_estado < duracao:
                 self.publicar_cmd(0.18, 0.0, wz)
             else:

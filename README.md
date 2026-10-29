@@ -96,6 +96,7 @@ O projeto pode ser executado facilmente através dos scripts disponíveis na pas
 Em um terminal:
 
 ```bash
+cd /home/betinha/TIGO_Digital_Twin
 ./scripts/run_simulation.sh
 ```
 
@@ -104,6 +105,7 @@ Em um terminal:
 Em um segundo terminal:
 
 ```bash
+cd /home/betinha/TIGO_Digital_Twin
 ./scripts/run_bridge.sh
 ```
 
@@ -118,8 +120,10 @@ A ponte conecta os tópicos:
 Em um terceiro terminal:
 
 ```bash
+cd /home/betinha/TIGO_Digital_Twin
 source /opt/ros/humble/setup.bash
 python3 scripts/gap_phase35.py
+
 ```
 
 ---

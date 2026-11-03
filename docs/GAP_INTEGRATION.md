@@ -141,8 +141,9 @@ Gaps candidatos
 
 ## Critério de Aceitação Atual
 
-O código atual identifica uma coluna como livre quando a profundidade média da
-faixa central excede `DIST_OBSTACULO` (0,75 m). Um gap candidato precisa ter pelo
+O código atual identifica uma coluna como livre quando o percentil 10 das
+profundidades válidas por coluna na faixa central excede `DIST_OBSTACULO`
+(1,0 m). Um gap candidato precisa ter pelo
 menos `LARGURA_ROBO_PX` (70 pixels). A largura física do gap não é calculada no
 momento.
 
@@ -196,25 +197,39 @@ Comportamento:
 
 ## Recuperação de Obstáculos
 
-Quando a distância mínima na região central fica abaixo de `DIST_CRITICA`
-(0,45 m), o robô recua antes da varredura. Se não houver gap direto ou a
-varredura não encontrar gaps, o ciclo de recuo e busca pode ser repetido até
-três tentativas. O recuo começa em 1,8 s e aumenta 0,5 s por tentativa, até
-2,8 s; depois disso, o robô para por segurança.
+Quando o percentil 5 das distâncias na região frontal fica abaixo de
+`DIST_GATILHO_RECUO` (0,8 m), o robô recua antes de procurar um caminho. O
+limiar frontal é separado do limiar de profundidade dos gaps para não iniciar
+um ciclo de recuo ao alinhar com uma passagem que ainda tem mais de 0,8 m de
+distância frontal. Se não houver gap direto
+ou a varredura não encontrar gaps, o ciclo de recuo e busca pode ser repetido
+até três tentativas. O recuo começa em 1,8 s e aumenta 0,5 s por tentativa,
+até 2,8 s; depois disso, o robô para por segurança.
 
-Quando um obstáculo está entre `DIST_CRITICA` (0,45 m) e
-`DIST_OBSTACULO` (0,75 m), o robô inicia a varredura temporizada: gira para a
-esquerda por 1,3 s e retorna para a direita por 2,6 s, comparando os scores
-dos gaps observados. Essa busca não é uma volta completa de 360 graus.
+A detecção frontal usa os 50% centrais da imagem na vertical e na horizontal;
+uma faixa central de 40% da largura e o percentil 5 das leituras válidas
+representam a distância frontal, reduzindo a dependência de uma faixa estreita
+no centro da câmera. Raios infinitos da câmera simulada são convertidos em
+10 m e contados como espaço livre; quadros sem nenhuma leitura ainda param o
+robô por segurança. Um watchdog também para o robô se a câmera ficar mais de
+0,3 s sem enviar imagem válida. Os logs `[SENSOR]` mostram essa distância e a
+quantidade de amostras usadas.
+
+Após recuar, o robô usa a pose publicada pelo Gazebo para girar 180° para a esquerda e depois
+180° para a direita, retornando à orientação inicial. Durante as duas etapas,
+registra o gap navegável mais largo em pixels observado. Ao final, alinha-se
+com a orientação em que esse gap foi visto e retoma a navegação. A varredura
+cobre as mesmas orientações nos dois sentidos; não é uma volta completa de
+360°.
 
 ```text
-Recuar quando necessário
+Recuar ao detectar bloqueio frontal
 ↓
-Varrer esquerda e direita parado
+Varrer 180° à esquerda e 180° à direita
 ↓
-Escolher o lado com maior score
+Alinhar com o maior gap observado
 ↓
-Contornar e retomar a navegação
+Retomar navegação
 ```
 
 ---
@@ -245,9 +260,10 @@ Os logs de execução incluem mensagens como:
 [SEM GAP] Nenhum gap após a varredura. Novo recuo ...
 ```
 
-Os comandos de velocidade são publicados em `/cmd_vel`. A odometria está
-disponível na bridge para monitoramento, mas o Gap Following atual não a usa
-para medir ângulos de varredura.
+Os comandos de velocidade são publicados em `/cmd_vel`. A pose do modelo TIGO
+em `/world/lacea_world/pose/info` é usada para medir os ângulos da varredura e
+alinhar o robô com o maior gap encontrado. O tópico de odometria bridged pode
+permanecer sem mensagens nesta configuração do plugin.
 
 ---
 

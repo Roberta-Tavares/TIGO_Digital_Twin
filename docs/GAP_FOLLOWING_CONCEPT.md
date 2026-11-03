@@ -152,13 +152,16 @@ script atual para validar a largura física dos gaps.
 
 O script `scripts/gap_phase35.py` calcula a profundidade média por coluna em
 uma faixa central da imagem e marca como livre a coluna acima do limiar de
-0,75 m. Aceita sequências com pelo menos 70 pixels e pontua os gaps pela
+1,0 m, usando o percentil 10 por coluna para não diluir obstáculos com raios
+sem retorno. Aceita sequências com pelo menos 70 pixels e pontua os gaps pela
 largura em pixels e profundidade média. A conversão para largura física e o
 filtro EMA descritos como possibilidades abaixo ainda não estão implementados.
 
-O modo de recuperação atual pode recuar e então varrer à esquerda por 1,3 s e
-à direita por 2,6 s, comparando os melhores scores observados. Essa varredura
-é temporizada e não garante uma volta de 360°.
+Ao detectar um obstáculo frontal a menos de 0,8 m, o modo de recuperação
+recua e usa a odometria para varrer 180° à esquerda e depois 180° à direita.
+O algoritmo retém o gap navegável mais largo observado, alinha o robô com a
+orientação correspondente e retoma a navegação. A segunda etapa retorna à
+orientação inicial e não amplia a faixa de ângulos observada.
 
 Referência de calibração:
 

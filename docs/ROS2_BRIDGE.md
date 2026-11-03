@@ -93,6 +93,7 @@ tipos ROS/Gazebo.
 | `/ascamera_hp60c/camera_publisher/depth0/image_raw` | Gazebo → ROS 2 | `sensor_msgs/msg/Image` |
 | `/ascamera_hp60c/camera_publisher/depth0/camera_info` | Gazebo → ROS 2 | `sensor_msgs/msg/CameraInfo` |
 | `/model/tigo/odometry` | Gazebo → ROS 2 | `nav_msgs/msg/Odometry` |
+| `/world/lacea_world/pose/info` | Gazebo → ROS 2 | `tf2_msgs/msg/TFMessage` |
 
 ---
 

@@ -114,6 +114,7 @@ A ponte conecta os tópicos:
 - `/ascamera_hp60c/camera_publisher/depth0/image_raw` (`Gazebo -> ROS 2`)
 - `/ascamera_hp60c/camera_publisher/depth0/camera_info` (`Gazebo -> ROS 2`)
 - `/model/tigo/odometry` (`Gazebo -> ROS 2`)
+- `/world/lacea_world/pose/info` (`Gazebo -> ROS 2`, usado para medir a rotação do TIGO)
 
 ### 3. Executar a Navegação Autônoma (Gap Following)
 

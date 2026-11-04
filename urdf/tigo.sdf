@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <model name="tigo" xmlns:ignition="http://ignitionrobotics.org/schema">
-    <pose>4.2 2.5 0.041 0 0 -1.5708</pose>
+    <pose>-3.8 2.0 0.041 0 0 -1.5708</pose>
 
     <!-- ========================================== -->
     <!-- CHASSI (CORPO PRINCIPAL)                   -->

@@ -30,9 +30,9 @@ class GapPhase35(Node):
         self.bridge = CvBridge()
 
         # --- PARÂMETROS DE NAVEGAÇÃO AJUSTADOS ---
-        self.DIST_OBSTACULO = 1.0     # Profundidade mínima por coluna para considerar um gap (m)
-        self.DIST_GATILHO_RECUO = 0.8 # Distância frontal para iniciar recuo (m)
-        self.LARGURA_ROBO_PX = 70     # Aumentado para garantir espaço físico
+        self.DIST_OBSTACULO = 0.7     # Profundidade mínima por coluna para considerar um gap (m)
+        self.DIST_GATILHO_RECUO = 0.6 # Distância frontal para iniciar recuo (m)
+        self.LARGURA_ROBO_PX = 40     # Largura mínima do gap em pixels
         self.VX_MAX = 0.30            # Velocidade linear máxima reduzida p/ maior controle
         self.VX_MIN = 0.15            
         self.WZ_VARREDURA = 0.65
@@ -95,14 +95,14 @@ class GapPhase35(Node):
         )
 
         if (
-            self.estado in ('VARRENDO_ESQ', 'VARRENDO_DIR')
+            self.estado == 'VARRENDO_360'
             and self.yaw_ultima_varredura is not None
         ):
             delta = self.diferenca_angular(yaw, self.yaw_ultima_varredura)
             self.progresso_varredura += self.direcao_varredura * delta
 
         self.yaw_atual = yaw
-        if self.estado in ('VARRENDO_ESQ', 'VARRENDO_DIR'):
+        if self.estado == 'VARRENDO_360':
             self.yaw_ultima_varredura = yaw
 
     def iniciar_varredura(self, estado, direcao):
@@ -293,32 +293,22 @@ class GapPhase35(Node):
                 self.parar()
                 self.maior_gap_largura = 0
                 self.alvo_yaw = None
-                if not self.iniciar_varredura('VARRENDO_ESQ', 1.0):
+                if not self.iniciar_varredura('VARRENDO_360', 1.0):
                     self.estado = 'AGUARDANDO_POSE'
                     self.get_logger().warn(
-                        "Aguardando pose do Gazebo para iniciar a varredura de 180 graus."
+                        "Aguardando pose do Gazebo para iniciar a varredura de 360 graus."
                     )
 
         elif self.estado == 'AGUARDANDO_POSE':
             self.parar()
             if self.yaw_atual is not None:
-                self.iniciar_varredura('VARRENDO_ESQ', 1.0)
+                self.iniciar_varredura('VARRENDO_360', 1.0)
 
-        elif self.estado == 'VARRENDO_ESQ':
+        elif self.estado == 'VARRENDO_360':
             self.registrar_maior_gap(perfil, larg)
 
-            if self.progresso_varredura < math.pi:
+            if self.progresso_varredura < 2.0 * math.pi:
                 self.publicar_cmd(0.0, 0.0, self.WZ_VARREDURA)
-            else:
-                self.parar()
-                self.get_logger().info("Varrendo DIREITA...")
-                self.iniciar_varredura('VARRENDO_DIR', -1.0)
-
-        elif self.estado == 'VARRENDO_DIR':
-            self.registrar_maior_gap(perfil, larg)
-
-            if self.progresso_varredura < math.pi:
-                self.publicar_cmd(0.0, 0.0, -self.WZ_VARREDURA)
             else:
                 self.parar()
                 if self.alvo_yaw is None:

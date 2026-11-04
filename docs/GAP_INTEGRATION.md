@@ -143,8 +143,8 @@ Gaps candidatos
 
 O código atual identifica uma coluna como livre quando o percentil 10 das
 profundidades válidas por coluna na faixa central excede `DIST_OBSTACULO`
-(1,0 m). Um gap candidato precisa ter pelo
-menos `LARGURA_ROBO_PX` (70 pixels). A largura física do gap não é calculada no
+(0,7 m). Um gap candidato precisa ter pelo
+menos `LARGURA_ROBO_PX` (40 pixels). A largura física do gap não é calculada no
 momento.
 
 ---
@@ -198,9 +198,9 @@ Comportamento:
 ## Recuperação de Obstáculos
 
 Quando o percentil 5 das distâncias na região frontal fica abaixo de
-`DIST_GATILHO_RECUO` (0,8 m), o robô recua antes de procurar um caminho. O
+`DIST_GATILHO_RECUO` (0,6 m), o robô recua antes de procurar um caminho. O
 limiar frontal é separado do limiar de profundidade dos gaps para não iniciar
-um ciclo de recuo ao alinhar com uma passagem que ainda tem mais de 0,8 m de
+um ciclo de recuo ao alinhar com uma passagem que ainda tem mais de 0,6 m de
 distância frontal. Se não houver gap direto
 ou a varredura não encontrar gaps, o ciclo de recuo e busca pode ser repetido
 até três tentativas. O recuo começa em 1,8 s e aumenta 0,5 s por tentativa,
@@ -215,17 +215,15 @@ robô por segurança. Um watchdog também para o robô se a câmera ficar mais d
 0,3 s sem enviar imagem válida. Os logs `[SENSOR]` mostram essa distância e a
 quantidade de amostras usadas.
 
-Após recuar, o robô usa a pose publicada pelo Gazebo para girar 180° para a esquerda e depois
-180° para a direita, retornando à orientação inicial. Durante as duas etapas,
-registra o gap navegável mais largo em pixels observado. Ao final, alinha-se
-com a orientação em que esse gap foi visto e retoma a navegação. A varredura
-cobre as mesmas orientações nos dois sentidos; não é uma volta completa de
-360°.
+Após recuar, o robô usa a pose publicada pelo Gazebo para fazer uma volta
+completa de 360° para a esquerda. Durante o giro, registra o gap navegável
+mais largo em pixels observado. Ao final, alinha-se com a orientação em que
+esse gap foi visto e retoma a navegação.
 
 ```text
 Recuar ao detectar bloqueio frontal
 ↓
-Varrer 180° à esquerda e 180° à direita
+Varrer 360° à esquerda
 ↓
 Alinhar com o maior gap observado
 ↓

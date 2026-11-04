@@ -100,6 +100,12 @@ cd /home/betinha/TIGO_Digital_Twin
 ./scripts/run_simulation.sh
 ```
 
+Para testar um corredor em S com obstáculos em três passagens:
+
+```bash
+./scripts/run_simulation.sh worlds/gap_challenge.sdf
+```
+
 ### 2. Iniciar a Ponte ROS 2 ↔ Gazebo (Bridge)
 
 Em um segundo terminal:

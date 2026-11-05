@@ -112,6 +112,7 @@ Em um segundo terminal:
 
 ```bash
 cd /home/betinha/TIGO_Digital_Twin
+export GZ_WORLD_NAME=lacea_gap_challenge
 ./scripts/run_bridge.sh
 ```
 
@@ -120,7 +121,7 @@ A ponte conecta os tópicos:
 - `/ascamera_hp60c/camera_publisher/depth0/image_raw` (`Gazebo -> ROS 2`)
 - `/ascamera_hp60c/camera_publisher/depth0/camera_info` (`Gazebo -> ROS 2`)
 - `/model/tigo/odometry` (`Gazebo -> ROS 2`)
-- `/world/lacea_world/pose/info` (`Gazebo -> ROS 2`, usado para medir a rotação do TIGO)
+- `/world/$GZ_WORLD_NAME/pose/info` (`Gazebo -> ROS 2`, usado para medir a rotação do TIGO)
 
 ### 3. Executar a Navegação Autônoma (Gap Following)
 
@@ -129,6 +130,7 @@ Em um terceiro terminal:
 ```bash
 cd /home/betinha/TIGO_Digital_Twin
 source /opt/ros/humble/setup.bash
+export GZ_WORLD_NAME=lacea_gap_challenge
 python3 scripts/gap_phase35.py
 
 ```

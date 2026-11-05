@@ -81,11 +81,13 @@ O projeto inicia a bridge configurada para `/cmd_vel`, imagem de profundidade,
 informações da câmera e odometria com:
 
 ```bash
+export GZ_WORLD_NAME=lacea_gap_challenge  # Use lacea_world no mundo padrão.
 ./scripts/run_bridge.sh
 ```
 
 O script `scripts/run_bridge.sh` contém as associações completas dos tópicos e
-tipos ROS/Gazebo.
+tipos ROS/Gazebo. O mesmo `GZ_WORLD_NAME` deve ser definido ao iniciar
+`scripts/gap_phase35.py` para que o nó receba a pose do mundo selecionado.
 
 | Tópico | Direção | Tipo ROS |
 |---|---|---|
@@ -93,7 +95,7 @@ tipos ROS/Gazebo.
 | `/ascamera_hp60c/camera_publisher/depth0/image_raw` | Gazebo → ROS 2 | `sensor_msgs/msg/Image` |
 | `/ascamera_hp60c/camera_publisher/depth0/camera_info` | Gazebo → ROS 2 | `sensor_msgs/msg/CameraInfo` |
 | `/model/tigo/odometry` | Gazebo → ROS 2 | `nav_msgs/msg/Odometry` |
-| `/world/lacea_world/pose/info` | Gazebo → ROS 2 | `tf2_msgs/msg/TFMessage` |
+| `/world/$GZ_WORLD_NAME/pose/info` | Gazebo → ROS 2 | `tf2_msgs/msg/TFMessage` |
 
 ---
 

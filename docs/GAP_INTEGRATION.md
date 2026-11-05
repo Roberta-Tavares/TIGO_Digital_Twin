@@ -259,9 +259,9 @@ Os logs de execução incluem mensagens como:
 ```
 
 Os comandos de velocidade são publicados em `/cmd_vel`. A pose do modelo TIGO
-em `/world/lacea_world/pose/info` é usada para medir os ângulos da varredura e
-alinhar o robô com o maior gap encontrado. O tópico de odometria bridged pode
-permanecer sem mensagens nesta configuração do plugin.
+em `/world/$GZ_WORLD_NAME/pose/info` é usada para medir os ângulos da varredura e
+alinhar o robô com o maior gap encontrado. Configure `GZ_WORLD_NAME` tanto na
+bridge quanto no nó de navegação; o valor padrão é `lacea_world`.
 
 ---
 

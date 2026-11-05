@@ -246,6 +246,27 @@ Bridge utilizada:
 ./scripts/run_bridge.sh
 ```
 
+## Mapeamento exploratório
+
+O script `scripts/tigo_mapper.py` é uma opção separada do nó de navegação
+`scripts/gap_phase35.py`. Ele varre 360° em cada posição, registra os gaps
+passáveis observados e seleciona gaps pendentes para avançar e explorar. As
+posições alcançadas e os gaps registrados são salvos em
+`/tmp/tigo_map_gaps.json`.
+
+Para usá-lo, inicie a simulação e a bridge como descrito acima e execute em
+outro terminal:
+
+```bash
+source /opt/ros/humble/setup.bash
+export GZ_WORLD_NAME=lacea_gap_challenge
+python3 scripts/tigo_mapper.py
+```
+
+Use o mesmo `GZ_WORLD_NAME` da bridge (o padrão é `lacea_world`). O mapeador é
+experimental e não modifica a configuração nem o comportamento de
+`gap_phase35.py`.
+
 ---
 
 # Testes Realizados

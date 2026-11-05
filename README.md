@@ -135,6 +135,23 @@ python3 scripts/gap_phase35.py
 
 ```
 
+### Mapeamento exploratório
+
+Para executar o mapeador exploratório em vez da navegação normal, mantenha a
+simulação e a bridge em execução e, em outro terminal, inicie:
+
+```bash
+cd /home/betinha/TIGO_Digital_Twin
+source /opt/ros/humble/setup.bash
+export GZ_WORLD_NAME=lacea_gap_challenge
+python3 scripts/tigo_mapper.py
+```
+
+O `tigo_mapper.py` faz varreduras de 360°, registra gaps passáveis e escolhe
+gaps pendentes para explorar, repetindo a varredura após avançar. O mapa de
+posições e gaps é salvo em `/tmp/tigo_map_gaps.json`. Este é um modo
+experimental separado; ele não altera nem substitui `gap_phase35.py`.
+
 ---
 
 ## Próximas Etapas

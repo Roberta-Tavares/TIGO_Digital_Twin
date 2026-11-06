@@ -363,7 +363,7 @@ Concluído:
 - Câmera de profundidade virtual posicionada na dianteira
 - Estrutura do LACEA carregada
 - ROS 2 Humble e Ignition Gazebo integrados pela bridge
-- Gap Following com recuo progressivo e varredura temporizada para esquerda e direita
+- Gap Following com recuo progressivo e varredura em 360º
 
 Em validação:
 

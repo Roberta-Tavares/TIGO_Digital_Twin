@@ -354,6 +354,25 @@ de tentativas. Essa varredura é parcial, não uma rotação de 360°.
 
 ---
 
+# Etapa 14 - Fusão YOLO + Profundidade + GAP (Navegação Semântica)
+
+Foi implementado o módulo de percepção semântica com Deep Learning (`scripts/yolo_depth_gap.py`),
+integrando:
+- Inserção de câmera RGB virtual (`ascamera_hp60c_rgb`) no modelo `urdf/tigo.sdf`.
+- Atualização da ponte ROS 2 (`scripts/run_bridge.sh`) para imagens RGB.
+- Detecção e classificação de obstáculos em tempo real com YOLOv8n.
+- Extração de profundidade 3D dos Bounding Boxes e inflação angular de margem de segurança por classe.
+- Arquitetura assíncrona multi-thread (loop de controle a 20 Hz e YOLO a 45 FPS com `imgsz=320`).
+- Conversão de imagem sem `cv_bridge` para garantir compatibilidade universal entre NumPy 1.x e 2.x.
+- Interface gráfica OpenCV (`--gui`) exibindo caixas delimitadoras coloridas, distância em metros e telemetria.
+
+Documentação detalhada:
+```text
+docs/YOLO_DEPTH_GAP.md
+```
+
+---
+
 # Estado Atual
 
 Concluído:
@@ -361,14 +380,17 @@ Concluído:
 - Ambiente virtual criado
 - Modelo STL integrado e visual alinhado ao eixo de movimento
 - Câmera de profundidade virtual posicionada na dianteira
+- Câmera RGB virtual integrada e alinhada
 - Estrutura do LACEA carregada
 - ROS 2 Humble e Ignition Gazebo integrados pela bridge
-- Gap Following com recuo progressivo e varredura em 360º
+- Gap Following com recuo progressivo e varredura em 360º (`gap_phase35.py`)
+- Mapeamento exploratório de gaps (`tigo_mapper.py`)
+- Navegação Semântica com Desvio de Obstáculos YOLO + Profundidade + GAP (`yolo_depth_gap.py`)
 
 Em validação:
 
-- Qualidade da imagem de profundidade e detecção de gaps em diferentes cenários
-- Resposta do robô aos desvios durante a navegação autônoma
+- Resposta do robô a diferentes classes de obstáculos semânticos
+- Testes comparativos entre Gap puro e Gap semântico em cenários dinâmicos
 
 ---
 
@@ -376,17 +398,17 @@ Em validação:
 
 ## Curto Prazo
 
-- Validar visualmente o tópico de profundidade da câmera
-- Testar gaps e obstáculos com diferentes geometrias
+- Inserir pedestres e obstáculos dinâmicos no ambiente virtual
+- Ajustar pesos de penalização de gaps para classes específicas
 
 ## Médio Prazo
 
-- Inserir obstáculos virtuais
-- Comparar navegação simulada com testes do robô físico
+- Integrar modo de perseguição de alvos (Target-Driven Gap Following)
+- Comparar navegação simulada com testes do robô físico no laboratório LACEA
 
 ## Longo Prazo
 
 - SLAM
 - Nav2
-- Planejamento de trajetórias
+- Planejamento global de trajetórias
 - Simulação completa do TIGO

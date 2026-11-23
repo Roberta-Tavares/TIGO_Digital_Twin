@@ -59,6 +59,26 @@
           </clip>
         </camera>
       </sensor>
+
+      <!-- CÂMERA RGB HP60C VIRTUAL (UTILIZADA PELO YOLO) -->
+      <sensor name="ascamera_hp60c_rgb" type="camera">
+        <pose>0.18 0 0.12 0 0 0</pose>
+        <update_rate>15</update_rate>
+        <always_on>true</always_on>
+        <topic>/ascamera_hp60c/camera_publisher/rgb0/image_raw</topic>
+        <camera>
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.10</near>
+            <far>10.0</far>
+          </clip>
+        </camera>
+      </sensor>
     </link>
 
     <!-- ========================================== -->

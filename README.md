@@ -47,9 +47,17 @@ TIGO_Digital_Twin
 ├── scripts
 │   ├── run_simulation.sh
 │   ├── run_bridge.sh
-│   └── gap_phase35.py
+│   ├── gap_phase35.py
+│   ├── tigo_mapper.py
+│   └── yolo_depth_gap.py
 │
 ├── docs
+│   ├── YOLO_DEPTH_GAP.md
+│   ├── GAP_INTEGRATION.md
+│   ├── GAP_FOLLOWING_CONCEPT.md
+│   ├── DEVELOPMENT_HISTORY.md
+│   ├── GAZEBO_SETUP.md
+│   ├── ROS2_BRIDGE.md
 │   └── imagens
 │
 └── README.md
@@ -120,6 +128,8 @@ A ponte conecta os tópicos:
 - `/cmd_vel` (`ROS 2 -> Gazebo`)
 - `/ascamera_hp60c/camera_publisher/depth0/image_raw` (`Gazebo -> ROS 2`)
 - `/ascamera_hp60c/camera_publisher/depth0/camera_info` (`Gazebo -> ROS 2`)
+- `/ascamera_hp60c/camera_publisher/rgb0/image_raw` (`Gazebo -> ROS 2`)
+- `/ascamera_hp60c/camera_publisher/rgb0/camera_info` (`Gazebo -> ROS 2`)
 - `/model/tigo/odometry` (`Gazebo -> ROS 2`)
 - `/world/$GZ_WORLD_NAME/pose/info` (`Gazebo -> ROS 2`, usado para medir a rotação do TIGO)
 
@@ -132,10 +142,25 @@ cd /home/betinha/TIGO_Digital_Twin
 source /opt/ros/humble/setup.bash
 export GZ_WORLD_NAME=lacea_gap_challenge
 python3 scripts/gap_phase35.py
-
 ```
 
-### Mapeamento exploratório
+### 4. Executar a Navegação Semântica (YOLO + Profundidade + GAP)
+
+Para executar o algoritmo com percepção semântica e **abrir a câmera com interface gráfica OpenCV**:
+
+```bash
+cd /home/betinha/TIGO_Digital_Twin
+source /opt/ros/humble/setup.bash
+export GZ_WORLD_NAME=lacea_gap_challenge
+python3 scripts/yolo_depth_gap.py --gui
+```
+
+> **Destaques:**
+> - A flag `--gui` abre a janela visual do OpenCV exibindo caixas delimitadoras coloridas por classe, medição métrica da distância dos obstáculos em metros ($Z$) e os vetores de navegação em tempo real.
+> - O processamento do YOLOv8 roda de forma assíncrona em uma *worker thread* paralela, garantindo controle reativo a 20 Hz e sem travamentos.
+> - Documentação técnica completa e relatório de problemas/soluções disponíveis em: [`docs/YOLO_DEPTH_GAP.md`](docs/YOLO_DEPTH_GAP.md).
+
+### 5. Mapeamento exploratório
 
 Para executar o mapeador exploratório em vez da navegação normal, mantenha a
 simulação e a bridge em execução e, em outro terminal, inicie:
@@ -163,7 +188,9 @@ experimental separado; ele não altera nem substitui `gap_phase35.py`.
 - [x] Ponte ROS ↔ Gazebo
 - [x] Integração do algoritmo Gap Following
 - [x] Navegação autônoma em simulação
-- [ ] Inserção de obstáculos dinâmicos adicionais
+- [x] Sensor RGB virtual alinhado à profundidade
+- [x] Navegação Semântica com YOLOv8 + Profundidade + GAP
+- [ ] Inserção de pedestres e obstáculos dinâmicos adicionais
 - [ ] Validação experimental comparativa (simulado vs real)
 
 ---

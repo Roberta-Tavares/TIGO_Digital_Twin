@@ -108,7 +108,7 @@ cd /home/betinha/TIGO_Digital_Twin
 ./scripts/run_simulation.sh
 ```
 
-```
+
 
 ### 2. Iniciar a Ponte ROS 2 ↔ Gazebo (Bridge)
 

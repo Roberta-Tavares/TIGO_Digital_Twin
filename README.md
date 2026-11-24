@@ -108,10 +108,6 @@ cd /home/betinha/TIGO_Digital_Twin
 ./scripts/run_simulation.sh
 ```
 
-Para testar um corredor em S com obstáculos em três passagens:
-
-```bash
-./scripts/run_simulation.sh worlds/gap_challenge.sdf
 ```
 
 ### 2. Iniciar a Ponte ROS 2 ↔ Gazebo (Bridge)
@@ -160,22 +156,6 @@ python3 scripts/yolo_depth_gap.py --gui
 > - O processamento do YOLOv8 roda de forma assíncrona em uma *worker thread* paralela, garantindo controle reativo a 20 Hz e sem travamentos.
 > - Documentação técnica completa e relatório de problemas/soluções disponíveis em: [`docs/YOLO_DEPTH_GAP.md`](docs/YOLO_DEPTH_GAP.md).
 
-### 5. Mapeamento exploratório
-
-Para executar o mapeador exploratório em vez da navegação normal, mantenha a
-simulação e a bridge em execução e, em outro terminal, inicie:
-
-```bash
-cd /home/betinha/TIGO_Digital_Twin
-source /opt/ros/humble/setup.bash
-export GZ_WORLD_NAME=lacea_gap_challenge
-python3 scripts/tigo_mapper.py
-```
-
-O `tigo_mapper.py` faz varreduras de 360°, registra gaps passáveis e escolhe
-gaps pendentes para explorar, repetindo a varredura após avançar. O mapa de
-posições e gaps é salvo em `/tmp/tigo_map_gaps.json`. Este é um modo
-experimental separado; ele não altera nem substitui `gap_phase35.py`.
 
 ---
 
@@ -204,4 +184,4 @@ Roberta Tavares
 
 Laboratório de Controle e Automação (LACEA)
 
-CEFET/RJ
+UFCI/RJ

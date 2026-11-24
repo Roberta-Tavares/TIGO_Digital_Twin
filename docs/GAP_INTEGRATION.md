@@ -1,340 +1,128 @@
 # Integração do Algoritmo Gap Following
 
-## Objetivo
+## 1. O que quero fazer (Objetivo)
 
-Este documento descreve a integração entre o algoritmo de navegação autônoma do TIGO e o ambiente virtual desenvolvido no Ignition Gazebo.
+Este documento descreve a integração entre o algoritmo de navegação autônoma reativa do robô TIGO e o ambiente virtual desenvolvido no Ignition Gazebo 6.
 
-O objetivo é executar na simulação o nó de navegação ROS 2 que recebe imagens
-de profundidade e publica comandos de velocidade.
+O objetivo é executar na simulação um nó de navegação ROS 2 que recebe imagens de profundidade em tempo real da câmera virtual HP60C, processa instantaneamente o perfil de obstáculos e publica comandos de velocidade (`cmd_vel`) para as rodas Mecanum omnidirecionais.
+
+### Foco: Navegação Reativa Sem Mapeamento Prévio
+O Gap Following opera exclusivamente com leituras sensoriais instantâneas:
+- Não constrói nem requer um mapa prévio do ambiente (sem SLAM).
+- Opera com baixíssimo custo computacional, ideal para controle em tempo real (20 Hz).
+- Encontra corredores livres ("gaps") e comanda o robô através da passagem mais segura.
 
 ---
 
-# Arquitetura Geral
+## 2. Como fiz (Arquitetura e Implementação)
 
-Fluxo de dados:
+### Fluxo de Dados
 
 ```text
-Ignition Gazebo
+Ignition Gazebo (Mundo LACEA)
        │
        ▼
-Depth Camera Virtual
+Depth Camera Virtual (ascamera_hp60c)
        │
-       ▼
+       ▼ (/ascamera_hp60c/camera_publisher/depth0/image_raw)
 ros_gz_bridge
        │
        ▼
 ROS 2 Humble
        │
        ▼
-gap_phase35.py
+scripts/gap_phase35.py (Nó Gap Following)
        │
-       ▼
-/cmd_vel
-       │
-       ▼
-TIGO Virtual
-```
-
----
-
-# Algoritmo Utilizado
-
-Arquivo:
-
-```text
-gap_phase35.py
-```
-
-Responsabilidade:
-
-- detectar espaços livres
-- identificar gaps navegáveis
-- calcular direção segura
-- publicar comandos de velocidade
-
----
-
-# Sensor Utilizado
-
-No robô real:
-
-```text
-HP60C (Angstrong)
-```
-
-Tipo:
-
-```text
-Câmera de Profundidade
-```
-
-Dados utilizados:
-
-```text
-Mapa de profundidade
-```
-
----
-
-# Tópico de Profundidade
-
-O algoritmo espera receber imagens através de:
-
-```text
-/ascamera_hp60c/camera_publisher/depth0/image_raw
-```
-
-Tipo:
-
-```text
-sensor_msgs/msg/Image
-```
-
----
-
-# Região de Interesse (ROI)
-
-Para reduzir processamento, apenas uma faixa horizontal da imagem é utilizada.
-
-Objetivos:
-
-- reduzir carga computacional
-- aumentar FPS
-- focar na área de navegação
-
----
-
-# Segmentação do Espaço Livre
-
-Cada coluna da ROI é analisada.
-
-Uma coluna é considerada livre quando:
-
-```text
-profundidade > limiar configurado
-```
-
----
-
-# Detecção de Gaps
-
-Após a segmentação:
-
-```text
-livre
-ocupado
-livre
-livre
-livre
-ocupado
-```
-
-o algoritmo procura sequências contínuas de espaço livre.
-
-Essas sequências são classificadas como:
-
-```text
-Gaps candidatos
-```
-
----
-
-## Critério de Aceitação Atual
-
-O código atual identifica uma coluna como livre quando o percentil 10 das
-profundidades válidas por coluna na faixa central excede `DIST_OBSTACULO`
-(0,7 m). Um gap candidato precisa ter pelo
-menos `LARGURA_ROBO_PX` (40 pixels). A largura física do gap não é calculada no
-momento.
-
----
-
-# Seleção do Gap
-
-Os candidatos são pontuados pela largura em pixels e pela profundidade média:
-
-```text
-score = largura_px * 0.7 + profundidade_media_m * 25
-```
-
-O gap de maior score é escolhido; o erro em relação ao centro da imagem define
-a correção angular durante a navegação normal.
-
----
-
-## Controle do Movimento
-
-O algoritmo publica mensagens:
-
-```text
-geometry_msgs/msg/Twist
-```
-
-no tópico:
-
-```text
-/cmd_vel
-```
-
----
-
-# Modos de Operação
-
-## Navegação Normal
-
-Condição:
-
-```text
-Gap válido encontrado
-```
-
-Comportamento:
-
-- avanço no eixo frontal
-- correção angular em direção ao centro do gap
-
----
-
-## Recuperação de Obstáculos
-
-Quando o percentil 5 das distâncias na região frontal fica abaixo de
-`DIST_GATILHO_RECUO` (0,6 m), o robô recua antes de procurar um caminho. O
-limiar frontal é separado do limiar de profundidade dos gaps para não iniciar
-um ciclo de recuo ao alinhar com uma passagem que ainda tem mais de 0,6 m de
-distância frontal. Se não houver gap direto
-ou a varredura não encontrar gaps, o ciclo de recuo e busca pode ser repetido
-até três tentativas. O recuo começa em 1,8 s e aumenta 0,5 s por tentativa,
-até 2,8 s; depois disso, o robô para por segurança.
-
-A detecção frontal usa os 50% centrais da imagem na vertical e na horizontal;
-uma faixa central de 40% da largura e o percentil 5 das leituras válidas
-representam a distância frontal, reduzindo a dependência de uma faixa estreita
-no centro da câmera. Raios infinitos da câmera simulada são convertidos em
-10 m e contados como espaço livre; quadros sem nenhuma leitura ainda param o
-robô por segurança. Um watchdog também para o robô se a câmera ficar mais de
-0,3 s sem enviar imagem válida. Os logs `[SENSOR]` mostram essa distância e a
-quantidade de amostras usadas.
-
-Após recuar, o robô usa a pose publicada pelo Gazebo para fazer uma volta
-completa de 360° para a esquerda. Durante o giro, registra o gap navegável
-mais largo em pixels observado. Ao final, alinha-se com a orientação em que
-esse gap foi visto e retoma a navegação.
-
-```text
-Recuar ao detectar bloqueio frontal
-↓
-Varrer 360° à esquerda
-↓
-Alinhar com o maior gap observado
-↓
-Retomar navegação
-```
-
----
-
-# Integração com Gazebo
-
-A comunicação ocorre através do:
-
-```text
+       ▼ (/cmd_vel)
 ros_gz_bridge
+       │
+       ▼
+TIGO Virtual (Plugin ignition-gazebo-mecanum-drive-system)
 ```
 
-Bridge utilizada:
+### Componentes Principais:
 
+1. **Sensor de Profundidade:**
+   - Tipo: Câmera de profundidade virtual (equivalente ao sensor real HP60C da Angstrong).
+   - Tópico: `/ascamera_hp60c/camera_publisher/depth0/image_raw` (formato `32FC1` em metros).
+   - Frequência: 15 Hz.
+
+2. **Região de Interesse (ROI):**
+   - Para maximizar a taxa de atualização e focar no espaço de circulação do robô, seleciona-se os 50% centrais verticais da matriz de profundidade.
+
+3. **Segmentação de Espaço Livre:**
+   - Cada coluna da ROI é avaliada: o percentil 10 das leituras válidas de cada coluna é calculado.
+   - Uma coluna é considerada "livre" se sua distância for superior a `DIST_OBSTACULO` (0,7 m).
+
+4. **Identificação e Ranqueamento de Gaps:**
+   - O algoritmo identifica sequências contínuas de colunas livres com largura mínima de `LARGURA_ROBO_PX` (40 pixels).
+   - Cada gap candidato recebe uma pontuação calculada por:
+     $$\text{Score} = \text{Largura}_{\text{px}} \times 0{,}7 + \text{Profundidade}_{\text{média}} \times 25$$
+   - O melhor gap é selecionado e a correção angular ($W_z$) é proporcional ao desvio do centro do gap em relação ao centro da imagem.
+
+5. **Máquina de Estados de Recuperação:**
+   - Quando a distância frontal fica abaixo de `DIST_GATILHO_RECUO` (0,6 m) ou nenhum gap direto é encontrado:
+     1. O robô desacelera e recua progressivamente (tempo inicial de 1,8 s, incrementando 0,5 s a cada tentativa, até 2,8 s).
+     2. Executa uma varredura giratória de 360° para a esquerda monitorando a pose publicada pelo Gazebo.
+     3. Registra o gap mais largo observado durante a volta completa.
+     4. Ao final da varredura, reorienta-se na direção desse melhor gap e retoma a navegação.
+
+---
+
+## 3. Problemas Enfrentados e Soluções Implementadas
+
+### 3.1. Desalinhamento Visual e de Eixos de Movimento
+- **Problema:** O modelo tridimensional exportado do CAD (`Tigo_para_gazebo.stl`) tinha seu comprimento posicionado ao longo do eixo `Y`. O plugin Mecanum do Gazebo e os sensores usam a convenção do ROS, onde `+X` é a frente. O robô se movia lateralmente ao receber comandos de avanço frontal.
+- **Solução Implementada:** Aplicou-se uma rotação visual de `-90°` no link visual dentro de `urdf/tigo.sdf`, alinhando a dianteira física do chassi perfeitamente com o eixo `+X` e a câmera frontal.
+
+### 3.2. Ruídos, NaNs e Raios Infinitos na Câmera Simulada
+- **Problema:** Quando o sensor do Gazebo não encontra superfícies dentro do range (ex.: portas abertas ou corredores longos), a imagem retorna valores `inf` ou `nan`. Cálculos aritméticos padrão falhavam ou geravam exceções numéricas.
+- **Solução Implementada:** Desenvolveu-se um tratamento numérico onde valores infinitos e NaNs são convertidos em um valor de segurança fixo de 10 m (espaço livre garantido). Além disso, a segmentação utiliza o percentil 10 em vez do mínimo absoluto, tornando o algoritmo imune a pixels ruidosos isolados.
+
+### 3.3. Travamentos em Cantos e Obstáculos Frontais (Deadlock)
+- **Problema:** Ao se aproximar de paredes perpendiculares ou cantos fechados, todos os pixels à frente ficavam abaixo do limiar de obstáculo. Sem saídas imediatas, o robô ficava parado indefinidamente.
+- **Solução Implementada:** Criação de uma rotina de escape robusta com recuo temporal progressivo (1,8 s até 2,8 s) associado a uma volta de 360° com memória angular. O robô mede sua rotação por `/world/$GZ_WORLD_NAME/pose/info`, encontra a orientação do gap mais amplo e se realinha automaticamente.
+
+### 3.4. Queda de Dados do Sensor e Segurança do Robô
+- **Problema:** Caso a ponte de comunicação oscile ou a simulação congele, comandos antigos de velocidade poderiam continuar ativos, colidindo o robô.
+- **Solução Implementada:** Implementação de um temporizador *Watchdog* de 0,3 s. Caso o callback de imagem não receba novas leituras dentro da janela, o robô para imediatamente e publica velocidade zero por segurança.
+
+---
+
+## 4. Como Executar
+
+### 1. Iniciar Simulação e Bridge
 ```bash
+# Terminal 1 - Simulação
+cd /home/betinha/TIGO_Digital_Twin
+./scripts/run_simulation.sh
+
+# Terminal 2 - Bridge
+cd /home/betinha/TIGO_Digital_Twin
+export GZ_WORLD_NAME=lacea_world
 ./scripts/run_bridge.sh
 ```
 
-## Mapeamento exploratório
-
-O script `scripts/tigo_mapper.py` é uma opção separada do nó de navegação
-`scripts/gap_phase35.py`. Ele varre 360° em cada posição, registra os gaps
-passáveis observados e seleciona gaps pendentes para avançar e explorar. As
-posições alcançadas e os gaps registrados são salvos em
-`/tmp/tigo_map_gaps.json`.
-
-Para usá-lo, inicie a simulação e a bridge como descrito acima e execute em
-outro terminal:
-
+### 2. Iniciar o Nó de Gap Following
 ```bash
+# Terminal 3 - Nó de Navegação
+cd /home/betinha/TIGO_Digital_Twin
 source /opt/ros/humble/setup.bash
-export GZ_WORLD_NAME=lacea_gap_challenge
-python3 scripts/tigo_mapper.py
+export GZ_WORLD_NAME=lacea_world
+python3 scripts/gap_phase35.py
 ```
 
-Use o mesmo `GZ_WORLD_NAME` da bridge (o padrão é `lacea_world`). O mapeador é
-experimental e não modifica a configuração nem o comportamento de
-`gap_phase35.py`.
-
 ---
 
-# Testes Realizados
+## 5. Estado Atual e Próximas Etapas
 
-Os logs de execução incluem mensagens como:
+### Estado Atual:
+- ✅ Câmera de profundidade virtual validada a 15 Hz em formato métrico (32FC1).
+- ✅ Algoritmo Gap Following funcional com recuo incremental e varredura 360°.
+- ✅ Comunicação bidirecional Gazebo ↔ ROS 2 via `run_bridge.sh`.
+- ✅ Robô navegando de forma autônoma e reativa no ambiente do laboratório LACEA.
 
-```text
-[NAVEGANDO] Vx=... | Wz=... | Gap=...px | Z=...m
-[OBSTÁCULO] Distância: ...m. Varrendo ESQUERDA...
-[SEM GAP] Nenhum gap após a varredura. Novo recuo ...
-```
-
-Os comandos de velocidade são publicados em `/cmd_vel`. A pose do modelo TIGO
-em `/world/$GZ_WORLD_NAME/pose/info` é usada para medir os ângulos da varredura e
-alinhar o robô com o maior gap encontrado. Configure `GZ_WORLD_NAME` tanto na
-bridge quanto no nó de navegação; o valor padrão é `lacea_world`.
-
----
-
-# Limitações Atuais
-
-Ainda precisam ser validados:
-
-- publicação da câmera virtual
-- profundidade simulada
-- resposta dinâmica do robô
-- obstáculos virtuais
-
----
-
-# Próximas Etapas
-
-## Curto Prazo
-
-- validar câmera virtual
-- validar tópicos de profundidade
-
-## Médio Prazo
-
-- inserir obstáculos
-- validar desvio autônomo
-
-## Longo Prazo
-
-- integração com SLAM
-- integração com Nav2
-- navegação autônoma completa
-
----
-
-# Estado Atual
-
-Concluído:
-
-✅ Gap Following funcional
-
-✅ Integração ROS 2
-
-✅ Bridge configurada
-
-✅ Simulação criada
-
-✅ Estrutura pronta para validação completa
-
-Em desenvolvimento:
-
-🔄 Profundidade virtual
-
-🔄 Navegação totalmente autônoma
-
-🔄 Ambiente de testes com obstáculos
+### Próximas Etapas:
+- [ ] Inserir obstáculos dinâmicos no ambiente virtual para testar evasão em movimento.
+- [ ] Conduzir testes comparativos de tempo e suavidade entre o Gap clássico e o Gap Semântico (`yolo_depth_gap.py`).
+- [ ] Validar o algoritmo calibrado na plataforma robótica física no laboratório LACEA.

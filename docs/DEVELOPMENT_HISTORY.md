@@ -10,7 +10,7 @@ Roberta Tavares
 
 Laboratório de Controle e Automação (LACEA)
 
-CEFET/RJ
+UFCI/RJ
 
 ---
 
@@ -377,20 +377,31 @@ docs/YOLO_DEPTH_GAP.md
 
 Concluído:
 
-- Ambiente virtual criado
-- Modelo STL integrado e visual alinhado ao eixo de movimento
-- Câmera de profundidade virtual posicionada na dianteira
-- Câmera RGB virtual integrada e alinhada
-- Estrutura do LACEA carregada
-- ROS 2 Humble e Ignition Gazebo integrados pela bridge
-- Gap Following com recuo progressivo e varredura em 360º (`gap_phase35.py`)
-- Mapeamento exploratório de gaps (`tigo_mapper.py`)
-- Navegação Semântica com Desvio de Obstáculos YOLO + Profundidade + GAP (`yolo_depth_gap.py`)
+- Ambiente virtual criado com o modelo tridimensional do LACEA
+- Modelo STL integrado e visual perfeitamente alinhado ao eixo de movimento (+X)
+- Câmera de profundidade virtual posicionada na dianteira operando a 15 Hz
+- Câmera RGB virtual integrada e alinhada à profundidade
+- ROS 2 Humble e Ignition Gazebo integrados pela ponte `run_bridge.sh`
+- Algoritmo Gap Following reativo com recuo progressivo e varredura 360º (`gap_phase35.py`)
+- Navegação Semântica com Desvio de Obstáculos YOLOv8n + Profundidade + GAP (`yolo_depth_gap.py`)
+- Arquitetura multi-thread assíncrona (inferência a 45 FPS e controle a 20 Hz)
+- Conversão de imagem independente de `cv_bridge` para compatibilidade total com NumPy 2.x
 
 Em validação:
 
-- Resposta do robô a diferentes classes de obstáculos semânticos
-- Testes comparativos entre Gap puro e Gap semântico em cenários dinâmicos
+- Resposta do robô a diferentes classes de obstáculos semânticos (pessoas, cadeiras, caixas)
+- Testes comparativos entre Gap puramente geométrico e Gap semântico em cenários dinâmicos
+
+---
+
+# Síntese: O Que Queremos Fazer, Como Fizemos, Problemas e Soluções
+
+| Pilar | Descrição no Projeto TIGO Digital Twin |
+| :--- | :--- |
+| **O que quero fazer** | Criar um gêmeo digital do robô omnidirecional TIGO no Ignition Gazebo e ROS 2 para validação de **navegação autônoma puramente reativa com percepção semântica RGB-D**, dispensando deliberadamente SLAM ou mapas prévios do ambiente. O robô navega em tempo real por corredores livres (**Gap Following**) e reconhece classes de obstáculos (**YOLOv8**) para desvios seguros. |
+| **Como fiz** | 1. Modelagem física e cinemática SDF com rodas Mecanum (`urdf/tigo.sdf`).<br>2. Cenário tridimensional do laboratório LACEA (`worlds/lacea.sdf`).<br>3. Câmera virtual RGB-D (profundidade métrica 32FC1 + RGB 15 Hz).<br>4. Ponte de comunicação ROS 2 ↔ Gazebo (`scripts/run_bridge.sh`).<br>5. Nó de controle reativo clássico (`scripts/gap_phase35.py`) com máquina de estados de recuo e varredura.<br>6. Nó de percepção semântica multi-thread (`scripts/yolo_depth_gap.py`) com Worker Thread assíncrona e inflação dinâmica de segurança por classe. |
+| **Problemas encontrados** | - *Incompatibilidade de ABI:* NumPy 2.x trazido pelo YOLO causava crash com o `cv_bridge` compilado para NumPy 1.x.<br>- *Latência de CPU:* inferência síncrona do YOLO demorava 200–450 ms na CPU, estourando o watchdog de 400 ms e fazendo o robô soluçar/parar.<br>- *Desalinhamento visual do STL:* modelo com comprimento em Y vs cinemática do robô e câmera em +X.<br>- *Filtro de gaps restritivo:* descarte de passagens válidas em corredores estreitos.<br>- *Bloqueios frontais (deadlock):* robô preso de frente para paredes sem rota lateral visível.<br>- *Ruídos e NaNs no sensor virtual:* leituras infinitas quebrando cálculos matemáticos. |
+| **Soluções adotadas** | - Conversão de imagem nativa direta via buffer binário (`np.frombuffer`), eliminando o `cv_bridge`.<br>- Worker Thread assíncrona para o YOLO com `imgsz=320` (inferência a 45 FPS sem atrasar o loop de controle a 20 Hz).<br>- Rotação visual de -90° no SDF e reposicionamento da câmera.<br>- Calibração do limiar mínimo para 40 pixels com pontuação ponderada.<br>- Máquina de estados de recuperação: recuo progressivo (1,8 a 2,8 s) seguido de giro 360° para buscar e alinhar com o maior gap.<br>- Conversão de NaNs/infs para teto de 10 m e filtragem por percentil estatístico. |
 
 ---
 
@@ -399,16 +410,14 @@ Em validação:
 ## Curto Prazo
 
 - Inserir pedestres e obstáculos dinâmicos no ambiente virtual
-- Ajustar pesos de penalização de gaps para classes específicas
+- Ajustar pesos e distâncias de inflação semântica para diferentes classes
 
 ## Médio Prazo
 
 - Integrar modo de perseguição de alvos (Target-Driven Gap Following)
-- Comparar navegação simulada com testes do robô físico no laboratório LACEA
+- Ensaios experimentais comparativos entre o modelo simulado e o robô físico no laboratório LACEA
 
 ## Longo Prazo
 
-- SLAM
-- Nav2
-- Planejamento global de trajetórias
-- Simulação completa do TIGO
+- Validação em ambientes industriais simulados complexos com múltiplos robôs
+- Transferência de parâmetros calibrados na simulação diretamente para o hardware embarcado do TIGO

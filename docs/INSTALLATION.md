@@ -215,9 +215,20 @@ ign topic -l
 
 ---
 
+# Instalação de Dependências Python (Percepção Semântica e Visão)
+
+Para executar o nó de percepção semântica com YOLOv8 e processamento de imagem:
+
+```bash
+pip install ultralytics opencv-python
+```
+
+> **Nota sobre o modelo:** Os pesos pré-treinados do YOLOv8 nano (`yolov8n.pt`) já estão incluídos na raiz do projeto.
+
+---
+
 # Próximos Passos
 
-- Implementação da câmera de profundidade virtual
-- Integração completa com o algoritmo Gap Following
-- Inserção de obstáculos virtuais
-- Navegação autônoma do TIGO
+- Executar a simulação e bridge de comunicação
+- Executar os nós de navegação autônoma (`gap_phase35.py` ou `yolo_depth_gap.py`)
+- Realizar testes com obstáculos no ambiente virtual

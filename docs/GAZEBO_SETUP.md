@@ -330,9 +330,8 @@ Concluído:
 
 # Próximas Melhorias
 
-- Inserção de obstáculos dinâmicos
-- Validar visualmente a imagem da câmera de profundidade
-- Sensor RGB virtual
-- Validar navegação Gap Following em diferentes cenários
-- Integração com Nav2
-- Integração com SLAM
+- Inserção de pedestres móveis e obstáculos dinâmicos
+- Validar visualmente a imagem da câmera de profundidade em novos cenários
+- Sensor RGB virtual (concluído)
+- Validar navegação Gap Following em diferentes cenários de desafio
+- Ensaios comparativos de movimentação reativa com robô real

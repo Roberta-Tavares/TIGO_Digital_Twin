@@ -335,4 +335,4 @@ Concluído:
 
 - Inserir obstáculos dinâmicos no cenário
 - Validar desvios com diferentes geometrias de obstáculo
-- Integrar mapeamento SLAM e Nav2
+- Realizar testes comparativos em cenários densos e dinâmicos
